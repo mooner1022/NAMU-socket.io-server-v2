@@ -26,7 +26,7 @@ var server = app.listen(3000,()=>{
 
 //Chat Server
 
-var io = socketio.listen(server)
+var io = socketio(server);
 
 io.on('connection',function(socket) {
 
