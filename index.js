@@ -1,64 +1,95 @@
-var app = require('express')();
-var server = require('http').createServer(app);
-// http server를 socket.io server로 upgrade한다
-var io = require('socket.io')(server);
+const express = require('express');
+const bodyParser = require('body-parser');
 
-// localhost:3000으로 서버에 접속하면 클라이언트로 index.html을 전송한다
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
-});
 
-// connection event handler
-// connection이 수립되면 event handler function의 인자로 socket인 들어온다
+const socketio = require('socket.io')
+var app = express();
+
+// parse application/x-www-form-urlencoded
+// { extended: true } : support nested object
+// Returns middleware that ONLY parses url-encoded bodies and 
+// This object will contain key-value pairs, where the value can be a 
+// string or array(when extended is false), or any type (when extended is true)
+app.use(bodyParser.urlencoded({ extended: true }));
+
+//This return middleware that only parses json and only looks at requests where the Content-type
+//header matched the type option. 
+//When you use req.body -> this is using body-parser cause it is going to parse 
+// the request body to the form we want
+app.use(bodyParser.json());
+
+
+var server = app.listen(3000,()=>{
+    console.log('Server is running on port number 3000')
+})
+
+
+//Chat Server
+
+var io = socketio.listen(server)
+
 io.on('connection', function(socket) {
+  socket.on('subscribe', function(data) {
+      console.log('subscribe trigged')
+      const room_data = JSON.parse(data)
+      userName = room_data.userName;
+      const roomName = room_data.roomName;
 
-  // 접속한 클라이언트의 정보가 수신되면
-  socket.on('login', function(data) {
-    console.log('Client logged-in:\n name:' + data.name + '\n userid: ' + data.userid);
+      socket.join(`${roomName}`)
+      console.log(`Username : ${userName} joined Room Name : ${roomName}`)
+      
+    
+      // Let the other user get notification that user got into the room;
+      // It can be use to indicate that person has read the messages. (Like turns "unread" into "read")
 
-    // socket에 클라이언트 정보를 저장한다
-    socket.name = data.name;
-    socket.userid = data.userid;
+      //TODO: need to chose
+      //io.to : User who has joined can get a event;
+      //socket.broadcast.to : all the users except the user who has joined will get the message
+      // socket.broadcast.to(`${roomName}`).emit('newUserToChatRoom',userName);
+      io.to(`${roomName}`).emit('newUserToChatRoom',userName);
 
-    // 접속된 모든 클라이언트에게 메시지를 전송한다
-    io.emit('login', data.name );
-  });
-
-  // 클라이언트로부터의 메시지가 수신되면
-  socket.on('chat', function(data) {
-    console.log('Message from %s: %s', socket.name, data.msg);
-
-    var msg = {
-      from: {
-        name: socket.name,
-        userid: socket.userid
-      },
-      msg: data.msg
-    };
-
-    // 메시지를 전송한 클라이언트를 제외한 모든 클라이언트에게 메시지를 전송한다
-    socket.broadcast.emit('chat', msg);
-
-    // 메시지를 전송한 클라이언트에게만 메시지를 전송한다
-    // socket.emit('s2c chat', msg);
-
-    // 접속된 모든 클라이언트에게 메시지를 전송한다
-    // io.emit('s2c chat', msg);
-
-    // 특정 클라이언트에게만 메시지를 전송한다
-    // io.to(id).emit('s2c chat', data);
-  });
-
-  // force client disconnect from server
-  socket.on('forceDisconnect', function() {
-    socket.disconnect();
   })
 
-  socket.on('disconnect', function() {
-    console.log('user disconnected: ' + socket.name);
-  });
-});
+  socket.on('unsubscribe',function(data) {
+      console.log('unsubscribe trigged')
+      const room_data = JSON.parse(data)
+      const userName = room_data.userName;
+      const roomName = room_data.roomName;
 
-server.listen(3000, function() {
-  console.log('Socket IO server listening on port 3000');
+      console.log(`Username : ${userName} leaved Room Name : ${roomName}`)
+      socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',userName)
+      socket.leave(`${roomName}`)
+  })
+
+  socket.on('newMessage',function(data) {
+      console.log('newMessage triggered')
+
+      const messageData = JSON.parse(data)
+      const messageContent = messageData.messageContent
+      const roomName = messageData.roomName
+
+      console.log(`[Room Number ${roomName}] ${userName} : ${messageContent}`)
+      // Just pass the data that has been passed from the writer socket
+
+      const chatData = {
+          userName : userName,
+          messageContent : messageContent,
+          roomName : roomName
+      }
+      socket.broadcast.to(`${roomName}`).emit('updateChat',JSON.stringify(chatData)) // Need to be parsed into Kotlin object in Kotlin
+  })
+
+  // socket.on('typing',function(roomNumber){ //Only roomNumber is needed here
+  //     console.log('typing triggered')
+  //     socket.broadcast.to(`${roomNumber}`).emit('typing')
+  // })
+
+  // socket.on('stopTyping',function(roomNumber){ //Only roomNumber is needed here
+  //     console.log('stopTyping triggered')
+  //     socket.broadcast.to(`${roomNumber}`).emit('stopTyping')
+  // })
+
+  socket.on('disconnect', function () {
+      console.log("One of sockets disconnected from our server.")
+  });
 });
