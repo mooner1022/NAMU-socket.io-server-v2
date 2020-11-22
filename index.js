@@ -1,7 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
-
 const socketio = require('socket.io')
 var app = express();
 
@@ -18,14 +16,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // the request body to the form we want
 app.use(bodyParser.json());
 
+let rooms = []
 
 var server = app.listen(3000,()=>{
     console.log('Server is running on port number 3000')
 })
 
-
 //Chat Server
-
 var io = socketio(server);
 
 io.on('connection',function(socket) {
@@ -36,25 +33,26 @@ io.on('connection',function(socket) {
     //Since we are going to use userName through whole socket connection, Let's make it global.   
     var userName = '';
     
-    socket.on('subscribe', function(data) {
-        console.log('subscribe trigged')
+    socket.on('join', function(data) {
+        console.log('join trigged');
+        const room_data = JSON.parse(data);
+        userName = room_data.userName;
+        const roomName = room_data.roomName;
+    
+        socket.join(`${roomName}`);
+        console.log(`Username : ${userName} joined Room Name : ${roomName}`);
+        io.to(`${roomName}`).emit('newUserToChatRoom',userName);
+        addMember(roomName,socket.id);
+    })
+
+    socket.on('reconnect', function(data) {
+        console.log('reconnect trigged')
         const room_data = JSON.parse(data)
         userName = room_data.userName;
         const roomName = room_data.roomName;
     
         socket.join(`${roomName}`)
-        console.log(`Username : ${userName} joined Room Name : ${roomName}`)
-        
-       
-        // Let the other user get notification that user got into the room;
-        // It can be use to indicate that person has read the messages. (Like turns "unread" into "read")
-
-        //TODO: need to chose
-        //io.to : User who has joined can get a event;
-        //socket.broadcast.to : all the users except the user who has joined will get the message
-        // socket.broadcast.to(`${roomName}`).emit('newUserToChatRoom',userName);
-        io.to(`${roomName}`).emit('newUserToChatRoom',userName);
-
+        console.log(`Username : ${userName} reconnect}`)
     })
 
     socket.on('unsubscribe',function(data) {
@@ -66,6 +64,7 @@ io.on('connection',function(socket) {
         console.log(`Username : ${userName} leaved Room Name : ${roomName}`)
         socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',userName)
         socket.leave(`${roomName}`)
+        removeMember(roomName,socket.id);
     })
 
     socket.on('newMessage',function(data) {
@@ -100,5 +99,28 @@ io.on('connection',function(socket) {
         console.log("One of sockets disconnected from our server.")
     });
 })
+
+function addRoom(roomName,members) {
+  rooms[roomName] = { _id:`${roomName}`, members:members }
+}
+
+function addMember(roomName,member) {
+  rooms[roomName].members.push(member)
+}
+
+function removeMember(roomName,member) {
+  rooms[roomName].members.remove(member)
+}
+
+Array.prototype.remove = function() {
+  var what, a = arguments, L = a.length, ax;
+  while (L && this.length) {
+      what = a[--L];
+      while ((ax = this.indexOf(what)) !== -1) {
+          this.splice(ax, 1);
+      }
+  }
+  return this;
+};
 
 module.exports = server; //Exporting for test
