@@ -18,8 +18,8 @@ app.use(bodyParser.json());
 
 let rooms = []
 
-var server = app.listen(3000,()=>{
-    console.log('Server is running on port number 3000')
+var server = app.listen(80,()=>{
+    console.log('Server is running on port number 80')
 })
 
 //Chat Server
