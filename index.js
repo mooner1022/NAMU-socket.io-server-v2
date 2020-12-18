@@ -119,4 +119,4 @@ Array.prototype.remove = function() {
   return this;
 };
 
-module.exports = server; //Exporting for test
+//module.exports = server; //Exporting for test
