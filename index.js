@@ -30,7 +30,7 @@ var server = app.listen(80,()=>{
 })
 */
 
-var io = new ioServer();
+var io = new socketio();
 io.attach(httpServer);
 io.attach(httpsServer);
 
