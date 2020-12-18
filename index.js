@@ -1,36 +1,39 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const socketio = require('socket.io')
+const fs = require('fs');
 var app = express();
+const options = { 
+    key: fs.readFileSync('/etc/letsencrypt/live/server.mooner.dev/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/server.mooner.dev/cert.pem'),
+    ca: fs.readFileSync('/etc/letsencrypt/live/server.mooner.dev/chain.pem')
+}
 
-// parse application/x-www-form-urlencoded
-// { extended: true } : support nested object
-// Returns middleware that ONLY parses url-encoded bodies and 
-// This object will contain key-value pairs, where the value can be a 
-// string or array(when extended is false), or any type (when extended is true)
 app.use(bodyParser.urlencoded({ extended: true }));
-
-//This return middleware that only parses json and only looks at requests where the Content-type
-//header matched the type option. 
-//When you use req.body -> this is using body-parser cause it is going to parse 
-// the request body to the form we want
 app.use(bodyParser.json());
 
 let rooms = []
 
+var httpServer = require('http').createServer(app);
+var httpsServer = require('https').createServer(options,app);
+
+httpServer.listen(80,()=> {
+    console.log('Server is running on port number 80')
+});
+httpsServer.listen(443,()=> {
+    console.log('Server is running on port number 443')
+});
+
+/*
 var server = app.listen(80,()=>{
     console.log('Server is running on port number 80')
 })
+*/
 
-//Chat Server
 var io = socketio(server);
 
 io.on('connection',function(socket) {
-
-    //The moment one of your client connected to socket.io server it will obtain socket id
-    //Let's print this out.
     console.log(`Connection : SocketId = ${socket.id}`)
-    //Since we are going to use userName through whole socket connection, Let's make it global.   
     var userName = '';
 
     socket.on('subscribe', function(data) {
