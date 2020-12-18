@@ -30,7 +30,9 @@ var server = app.listen(80,()=>{
 })
 */
 
-var io = socketio(server);
+var io = new ioServer();
+io.attach(httpServer);
+io.attach(httpsServer);
 
 io.on('connection',function(socket) {
     console.log(`Connection : SocketId = ${socket.id}`)
