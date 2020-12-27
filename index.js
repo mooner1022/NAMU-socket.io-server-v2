@@ -43,10 +43,15 @@ io.on('connection',function(socket) {
         const room_data = JSON.parse(data);
         userName = room_data.userName;
         const roomName = room_data.roomName;
+
+        const chatData = {
+            userName : userName,
+            roomName : roomName
+        }
     
         socket.join(`${roomName}`);
         console.log(`Username : ${userName} joined Room Name : ${roomName}`);
-        io.to(`${roomName}`).emit('newUserToChatRoom',userName);
+        io.to(`${roomName}`).emit('newUserToChatRoom',JSON.stringify(chatData));
     })
 
     socket.on('unsubscribe',function(data) {
@@ -55,10 +60,19 @@ io.on('connection',function(socket) {
         const userName = room_data.userName;
         const roomName = room_data.roomName;
     
+        const chatData = {
+            userName : userName,
+            roomName : roomName
+        }
+
         console.log(`Username : ${userName} leaved Room Name : ${roomName}`)
-        socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',userName)
+        socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',JSON.stringify(chatData))
         socket.leave(`${roomName}`)
     })
+
+    socket.on("private_message", (anotherSocketId, msg) => {
+        socket.to(anotherSocketId).emit("private_message", socket.id, msg);
+    });
 
     socket.on('newMessage',function(data) {
         console.log('newMessage triggered')
@@ -95,18 +109,6 @@ io.on('connection',function(socket) {
         console.log("One of sockets disconnected from our server.")
     });
 })
-
-function addRoom(roomName,members) {
-  rooms[roomName] = { _id:`${roomName}`, members:members }
-}
-
-function addMember(roomName,member) {
-  rooms[roomName].members.push(member)
-}
-
-function removeMember(roomName,member) {
-  rooms[roomName].members.remove(member)
-}
 
 Array.prototype.remove = function() {
   var what, a = arguments, L = a.length, ax;
