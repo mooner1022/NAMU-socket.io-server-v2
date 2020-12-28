@@ -32,4 +32,4 @@ function flush() {
     fs.writeFileSync('./data.json', data);
 }
 
-export {addMember,removeMember,load,flush,rooms};
+module.exports = {addMember,removeMember,load,flush,rooms};
