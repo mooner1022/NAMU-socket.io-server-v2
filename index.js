@@ -8,13 +8,12 @@ const options = {
     cert: fs.readFileSync('/etc/letsencrypt/live/server.mooner.dev/cert.pem'),
     ca: fs.readFileSync('/etc/letsencrypt/live/server.mooner.dev/chain.pem')
 }
-
-import { load,flush,addMember,removeMember,rooms } from './data.js'
+const dataManager = require('./data');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-load();
+dataManager.load();
 
 var httpServer = require('http').createServer(app);
 var httpsServer = require('https').createServer(options,app);
@@ -55,11 +54,11 @@ io.on('connection',function(socket) {
         socket.join(`${roomName}`);
         console.log(`Username : ${userName} joined Room Name : ${roomName}`);
         io.to(`${roomName}`).emit('newUserToChatRoom',JSON.stringify(chatData));
-        addMember(roomName,{
+        dataManager.addMember(roomName,{
             name : userName,
             imageHash : imageHash
         });
-        flush();
+        dataManager.flush();
     })
 
     socket.on('unsubscribe',function(data) {
@@ -77,8 +76,8 @@ io.on('connection',function(socket) {
         console.log(`Username : ${userName} leaved Room Name : ${roomName}`);
         socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',JSON.stringify(chatData));
         socket.leave(`${roomName}`);
-        removeMember(roomName,imageHash);
-        flush();
+        dataManager.removeMember(roomName,imageHash);
+        dataManager.flush();
     })
 
     socket.on('getMembers',function(data) {
@@ -86,7 +85,7 @@ io.on('connection',function(socket) {
         const roomName = room_data.roomName;
         const requestCode = room_data.requestCode;
 
-        socket.to(requestCode).emit('response',JSON.stringify(rooms[roomName]))
+        socket.to(requestCode).emit('response',JSON.stringify(dataManager.rooms[roomName]))
     })
 
     socket.on("private_message", (anotherSocketId, msg) => {
