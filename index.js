@@ -9,10 +9,12 @@ const options = {
     ca: fs.readFileSync('/etc/letsencrypt/live/server.mooner.dev/chain.pem')
 }
 
+import { load,flush,addMember,removeMember,rooms } from './data.js'
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-let rooms = []
+load();
 
 var httpServer = require('http').createServer(app);
 var httpsServer = require('https').createServer(options,app);
@@ -43,6 +45,7 @@ io.on('connection',function(socket) {
         const room_data = JSON.parse(data);
         userName = room_data.userName;
         const roomName = room_data.roomName;
+        const imageHash = room_data.imageHash;
 
         const chatData = {
             userName : userName,
@@ -52,22 +55,38 @@ io.on('connection',function(socket) {
         socket.join(`${roomName}`);
         console.log(`Username : ${userName} joined Room Name : ${roomName}`);
         io.to(`${roomName}`).emit('newUserToChatRoom',JSON.stringify(chatData));
+        addMember(roomName,{
+            name : userName,
+            imageHash : imageHash
+        });
+        flush();
     })
 
     socket.on('unsubscribe',function(data) {
-        console.log('unsubscribe trigged')
-        const room_data = JSON.parse(data)
+        console.log('unsubscribe trigged');
+        const room_data = JSON.parse(data);
         const userName = room_data.userName;
         const roomName = room_data.roomName;
+        const imageHash = room_data.imageHash;
     
         const chatData = {
             userName : userName,
             roomName : roomName
-        }
+        };
 
-        console.log(`Username : ${userName} leaved Room Name : ${roomName}`)
-        socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',JSON.stringify(chatData))
-        socket.leave(`${roomName}`)
+        console.log(`Username : ${userName} leaved Room Name : ${roomName}`);
+        socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',JSON.stringify(chatData));
+        socket.leave(`${roomName}`);
+        removeMember(roomName,imageHash);
+        flush();
+    })
+
+    socket.on('getMembers',function(data) {
+        console.log('getMembers trigged');
+        const roomName = room_data.roomName;
+        const requestCode = room_data.requestCode;
+
+        socket.to(requestCode).emit('response',JSON.stringify(rooms[roomName]))
     })
 
     socket.on("private_message", (anotherSocketId, msg) => {
@@ -89,7 +108,7 @@ io.on('connection',function(socket) {
                 messageContent : messageContent,
                 roomName : roomName
             }
-            socket.broadcast.to(`${roomName}`).emit('updateChat',JSON.stringify(chatData)) // Need to be parsed into Kotlin object in Kotlin
+            socket.broadcast.to(`${roomName}`).emit('updateChat',JSON.stringify(chatData))
         } catch(e) {
             console.log(e);
         }
