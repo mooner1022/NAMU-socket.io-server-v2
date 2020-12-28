@@ -82,6 +82,7 @@ io.on('connection',function(socket) {
 
     socket.on('getMembers',function(data) {
         console.log('getMembers trigged');
+        const room_data = JSON.parse(data);
         const roomName = room_data.roomName;
         const requestCode = room_data.requestCode;
 
