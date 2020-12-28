@@ -24,11 +24,13 @@ function addMember(roomName,member) {
 function removeMember(roomName,imageHash) {
     if(rooms.hasOwnProperty(roomName)) {
         let room = rooms[roomName];
-        for( var i = 0; i < room.length; i++){ 
-            if (room[i].imageHash == imageHash) { 
-                rooms[room].splice(i, 1); 
+        var aJsonArray = new Array();
+        for( var i = 0; i < room.length; i++) { 
+            if (room[i].imageHash != imageHash) { 
+                aJsonArray.push(room[i])
             }
         }
+        rooms[roomName] = aJsonArray;
     }
 }
 
