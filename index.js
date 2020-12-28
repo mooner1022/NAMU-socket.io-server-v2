@@ -37,12 +37,11 @@ io.attach(httpsServer);
 
 io.on('connection',function(socket) {
     console.log(`Connection : SocketId = ${socket.id}`)
-    var userName = '';
 
     socket.on('subscribe', function(data) {
         console.log('subscribe trigged');
         const room_data = JSON.parse(data);
-        userName = room_data.userName;
+        const userName = room_data.userName;
         const roomName = room_data.roomName;
         const imageHash = room_data.imageHash;
 
@@ -86,7 +85,7 @@ io.on('connection',function(socket) {
         const roomName = room_data.roomName;
         const requestCode = room_data.requestCode;
 
-        socket.to(requestCode).emit('response',JSON.stringify(dataManager.rooms[roomName]))
+        socket.broadcast.to(requestCode).emit('response',JSON.stringify(dataManager.rooms[roomName]))
     })
 
     socket.on("private_message", (anotherSocketId, msg) => {
@@ -114,12 +113,12 @@ io.on('connection',function(socket) {
         }
     })
 
-    // socket.on('typing',function(roomNumber){ //Only roomNumber is needed here
+    // socket.on('typing',function(roomNumber){
     //     console.log('typing triggered')
     //     socket.broadcast.to(`${roomNumber}`).emit('typing')
     // })
 
-    // socket.on('stopTyping',function(roomNumber){ //Only roomNumber is needed here
+    // socket.on('stopTyping',function(roomNumber){
     //     console.log('stopTyping triggered')
     //     socket.broadcast.to(`${roomNumber}`).emit('stopTyping')
     // })
@@ -140,4 +139,4 @@ Array.prototype.remove = function() {
   return this;
 };
 
-//module.exports = server; //Exporting for test
+//module.exports = server;
