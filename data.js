@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-let rooms = [];
+let rooms = {};
 
 function load() {
     try {
@@ -11,13 +11,13 @@ function load() {
 }
 
 function addMember(roomName,member) {
-    if(!rooms.includes(roomName)) {
+    if(!rooms.hasOwnProperty(roomName)) {
         rooms[roomName] = rooms[roomName].push(member);
     }
 }
 
 function removeMember(roomName,imageHash) {
-    if(rooms.includes(roomName)) {
+    if(rooms.hasOwnProperty(roomName)) {
         let room = rooms[roomName];
         for( var i = 0; i < room.length; i++){ 
             if (room[i].imageHash == imageHash) { 
