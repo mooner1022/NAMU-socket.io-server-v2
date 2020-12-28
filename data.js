@@ -12,10 +12,12 @@ function load() {
 
 function addMember(roomName,member) {
     if(!rooms.hasOwnProperty(roomName)) {
+        var aJsonArray = new Array();
         var aJson = new Object();
         aJson.name = member.name;
         aJson.imageHash = member.imageHash;
-        rooms[roomName].push(aJson);
+        aJsonArray.push(aJson);
+        rooms[roomName] = aJsonArray;
     }
 }
 
