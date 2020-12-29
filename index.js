@@ -96,6 +96,7 @@ io.on('connection',function(socket) {
         console.log('newMessage triggered')
         try {
             const messageData = JSON.parse(data)
+            const userName = room_data.userName;
             const messageContent = messageData.messageContent
             const roomName = messageData.roomName
     
