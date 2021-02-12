@@ -18,6 +18,11 @@ function addMember(roomName,member) {
         aJson.imageHash = member.imageHash;
         aJsonArray.push(aJson);
         rooms[roomName] = aJsonArray;
+    } else {
+        var aJson = new Object();
+        aJson.name = member.name;
+        aJson.imageHash = member.imageHash;
+        rooms[roomName].push(aJson);
     }
 }
 
