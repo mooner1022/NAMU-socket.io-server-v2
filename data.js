@@ -35,7 +35,9 @@ function removeMember(roomName,imageHash) {
                 aJsonArray.push(room[i])
             }
         }
-        if(!(aJsonArray.length <= 0)) {
+        if(aJsonArray.length <= 0) {
+            delete rooms.roomName
+        } else {
             rooms[roomName] = aJsonArray;
         }
     }
