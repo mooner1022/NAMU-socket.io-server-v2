@@ -85,7 +85,8 @@ io.on('connection',function(socket) {
         const roomName = room_data.roomName;
         const requestCode = room_data.requestCode;
 
-        socket.broadcast.to(requestCode).emit('response',JSON.stringify(dataManager.rooms[roomName]))
+        const members = dataManager.getMembersString(roomName);
+        socket.broadcast.to(`${requestCode}`).emit('response',members==null?[]:members);
     })
 
     socket.on("private_message", (anotherSocketId, msg) => {

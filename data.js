@@ -30,8 +30,19 @@ function removeMember(roomName,imageHash) {
                 aJsonArray.push(room[i])
             }
         }
-        rooms[roomName] = aJsonArray;
+        if(!(aJsonArray.length <= 0)) {
+            rooms[roomName] = aJsonArray;
+        }
     }
+}
+
+function getMembersString(roomName) {
+    if(rooms.hasOwnProperty(roomName)) {
+        let room = rooms[roomName];
+        if(room.length == 0) return null;
+        return JSON.stringify(room);
+    }
+    return null;
 }
 
 function flush() {
@@ -39,4 +50,4 @@ function flush() {
     fs.writeFileSync('./data.json', data);
 }
 
-module.exports = {addMember,removeMember,load,flush,rooms};
+module.exports = {addMember,removeMember,getMembersString,load,flush,rooms};
