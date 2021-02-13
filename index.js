@@ -39,7 +39,6 @@ io.on('connection',function(socket) {
     console.log(`Connection : SocketId = ${socket.id}`)
 
     socket.on('subscribe', function(data) {
-        console.log('subscribe trigged');
         const room_data = JSON.parse(data);
         const userName = room_data.userName;
         const roomName = room_data.roomName;
@@ -60,7 +59,6 @@ io.on('connection',function(socket) {
     })
 
     socket.on('unsubscribe',function(data) {
-        console.log('unsubscribe trigged');
         const room_data = JSON.parse(data);
         const userName = room_data.userName;
         const roomName = room_data.roomName;
@@ -85,6 +83,7 @@ io.on('connection',function(socket) {
 
         const members = dataManager.getMembersString(roomName);
         socket.broadcast.to(`${requestCode}`).emit('response',members==null?[]:members);
+        console.log('members '+members+' emitted to '+requestCode);
     })
 
     socket.on("private_message", (anotherSocketId, msg) => {
@@ -92,7 +91,6 @@ io.on('connection',function(socket) {
     });
 
     socket.on('newMessage',function(data) {
-        console.log('newMessage triggered')
         try {
             const messageData = JSON.parse(data)
             const userName = messageData.userName;
