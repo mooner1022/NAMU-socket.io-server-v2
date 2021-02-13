@@ -24,6 +24,7 @@ function addMember(roomName,member) {
         aJson.imageHash = member.imageHash;
         rooms[roomName].push(aJson);
     }
+    flush();
 }
 
 function removeMember(roomName,imageHash) {
@@ -40,6 +41,7 @@ function removeMember(roomName,imageHash) {
         } else {
             rooms[roomName] = aJsonArray;
         }
+        flush();
     }
 }
 

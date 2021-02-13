@@ -13,7 +13,7 @@ const dataManager = require('./data');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-dataManager.load();
+//dataManager.load();
 
 var httpServer = require('http').createServer(app);
 var httpsServer = require('https').createServer(options,app);
@@ -57,7 +57,6 @@ io.on('connection',function(socket) {
             name : userName,
             imageHash : imageHash
         });
-        dataManager.flush();
     })
 
     socket.on('unsubscribe',function(data) {
@@ -76,7 +75,6 @@ io.on('connection',function(socket) {
         socket.broadcast.to(`${roomName}`).emit('userLeftChatRoom',JSON.stringify(chatData));
         socket.leave(`${roomName}`);
         dataManager.removeMember(roomName,imageHash);
-        dataManager.flush();
     })
 
     socket.on('getMembers',function(data) {
