@@ -78,11 +78,11 @@ io.on('connection',function(socket) {
     socket.on('getMembers',function(data) {
         console.log('getMembers trigged');
         const room_data = JSON.parse(data);
-        const roomName = room_data.roomName;
+        const roomName = room_data.roomName; 
         const requestCode = room_data.requestCode;
 
         const members = dataManager.getMembersString(roomName);
-        socket.broadcast.to(`${requestCode}`).emit('response',members==null?[]:members);
+        socket.broadcast.to(`${requestCode}`).emit('updateChat',members==null?[]:members);
         console.log('members '+members+' emitted to '+requestCode);
     })
 
